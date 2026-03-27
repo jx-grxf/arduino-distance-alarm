@@ -64,7 +64,7 @@ void loop() {
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
 
-  // Timeout avoids long blocking if sensor has no echo.
+
   long duration = pulseIn(ECHO_PIN, HIGH, 30000);
   int distance = (duration > 0) ? int(duration * 0.034 / 2.0) : 400;
 
@@ -81,14 +81,14 @@ void loop() {
 
   lcd.setCursor(0, 1);
   if (state == 2) {
-    lcd.print("BUBU          ");
+    lcd.print("ALARM!          ");
   } else if (state == 1) {
-    lcd.print("ACHTUNG       ");
+    lcd.print("CAREFUL       ");
   } else {
-    lcd.print("ALLES OK      ");
+    lcd.print("EVERYTHING OK      ");
   }
 
-  // Machine-readable format expected by server: distance,state
+
   Serial.print(distance);
   Serial.print(",");
   Serial.println(state);
