@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distance Alarm Control Deck</title>
+  <style>
+    :root {
+      --bg: #f4f7f3;
+      --bg-elev: #ffffff;
+      --panel-bg: #ffffff;
+      --ink: #12313a;
+      --ink-soft: #52717a;
+      --line: #c9d8d4;
+      --ok: #1f9d61;
+      --warn: #d28b0f;
+      --alarm: #c43d36;
+      --accent: #1783b8;
+      --accent-soft: rgba(23, 131, 184, 0.12);
+      --card-shadow: 0 12px 28px rgba(19, 61, 70, 0.08);
+      --bg-blob-a: #d9ece9;
+      --bg-blob-b: #d5e8f3;
+      --bg-blob-c: #e5efe2;
+      --button-bg: #ffffff;
+      --button-hover-bg: #f1f8f7;
+      --meta-code-bg: #edf3f2;
+      --health-bg: #fcfffd;
+      --logs-bg: #f8fbfa;
+      --alarm-log: #962824;
+      --chart-line: #1783b8;
+      --chart-fill: rgba(23, 131, 184, 0.12);
+      --grid-line: rgba(82, 113, 122, 0.22);
+      --warn-line: rgba(210, 139, 15, 0.45);
+      --alarm-line: rgba(196, 61, 54, 0.45);
+      --font-main: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Menlo, Consolas, monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg: #020617;
+      --bg-elev: #0b1220;
+      --panel-bg: #0f1a2b;
+      --ink: #e6f0ff;
+      --ink-soft: #9bb0c8;
+      --line: #2a3d52;
+      --ok: #22c55e;
+      --warn: #facc15;
+      --alarm: #ef4444;
+      --accent: #22d3ee;
+      --accent-soft: rgba(56, 189, 248, 0.2);
+      --card-shadow: 0 22px 60px rgba(2, 6, 23, 0.7);
+      --bg-blob-a: rgba(56, 189, 248, 0.22);
+      --bg-blob-b: rgba(34, 197, 94, 0.18);
+      --bg-blob-c: rgba(148, 163, 184, 0.12);
+      --button-bg: #101b2e;
+      --button-hover-bg: #16263f;
+      --meta-code-bg: #122238;
+      --health-bg: #0f1a2d;
+      --logs-bg: #0c1727;
+      --alarm-log: #ff9b9b;
+      --chart-line: #22d3ee;
+      --chart-fill: rgba(34, 211, 238, 0.12);
+      --grid-line: rgba(148, 163, 184, 0.24);
+      --warn-line: rgba(250, 204, 21, 0.55);
+      --alarm-line: rgba(239, 68, 68, 0.55);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-main);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 4% 8%, var(--bg-blob-a) 0%, transparent 38%),
+        radial-gradient(circle at 94% 2%, var(--bg-blob-b) 0%, transparent 36%),
+        radial-gradient(circle at 88% 90%, var(--bg-blob-c) 0%, transparent 38%),
+        var(--bg);
+      min-height: 100vh;
+      padding: 18px;
+    }
+
+    .shell {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+      background: var(--bg-elev);
+      box-shadow: var(--card-shadow);
+    }
+
+    .top {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      background: linear-gradient(130deg, var(--accent-soft), rgba(255, 255, 255, 0));
+    }
+
+    .brand h1 {
+      font-size: 1.25rem;
+      letter-spacing: 0.03em;
+      font-weight: 700;
+    }
+
+    .brand p {
+      margin-top: 4px;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+    }
+
+    .conn {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+      background: color-mix(in srgb, var(--panel-bg) 84%, #ffffff 16%);
+    }
+
+    .top-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.82rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #9bb4bc;
+      transition: all 180ms ease;
+    }
+
+    .dot.ok { background: var(--ok); box-shadow: 0 0 10px rgba(31, 157, 97, 0.45); }
+    .dot.bad { background: var(--alarm); box-shadow: 0 0 10px rgba(196, 61, 54, 0.5); }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1.2fr 1.9fr;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel-bg);
+      padding: 14px;
+    }
+
+    .label {
+      color: var(--ink-soft);
+      letter-spacing: 0.12em;
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .distance {
+      font-size: 3rem;
+      line-height: 1;
+      font-weight: 760;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .distance small { font-size: 1rem; color: var(--ink-soft); font-weight: 600; }
+
+    .state-chip {
+      display: inline-flex;
+      border: 1px solid;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .state-chip.ok { border-color: rgba(31, 157, 97, 0.45); color: #0f6d43; background: rgba(31, 157, 97, 0.12); }
+    .state-chip.warn { border-color: rgba(210, 139, 15, 0.45); color: #8f6109; background: rgba(210, 139, 15, 0.12); }
+    .state-chip.alarm { border-color: rgba(196, 61, 54, 0.5); color: #8d2925; background: rgba(196, 61, 54, 0.12); }
+
+    .kpi-grid {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .kpi {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: color-mix(in srgb, var(--panel-bg) 85%, #ffffff 15%);
+    }
+
+    .kpi .k {
+      color: var(--ink-soft);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .kpi .v {
+      margin-top: 3px;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .meta {
+      margin-top: 10px;
+      display: grid;
+      gap: 6px;
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+    }
+
+    .meta code {
+      font-family: var(--font-mono);
+      color: var(--ink);
+      background: var(--meta-code-bg);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 1px 6px;
+    }
+
+    .health {
+      margin-top: 10px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.82rem;
+      color: var(--ink-soft);
+      background: var(--health-bg);
+      min-height: 54px;
+    }
+
+    .actions {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px 10px;
+      background: var(--button-bg);
+      color: var(--ink);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    button:hover { background: var(--button-hover-bg); transform: translateY(-1px); }
+
+    .chart-panel {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+    }
+
+    .chart-wrap {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      height: 320px;
+      background: linear-gradient(180deg, rgba(23, 131, 184, 0.1), rgba(23, 131, 184, 0.01));
+      overflow: hidden;
+      position: relative;
+    }
+
+    #chart {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--ink-soft);
+      font-size: 0.79rem;
+    }
+
+    .legend-left { display: inline-flex; align-items: center; gap: 8px; }
+
+    .swatch {
+      width: 14px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .logs {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      max-height: 180px;
+      overflow-y: auto;
+      background: var(--logs-bg);
+      padding: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--ink-soft);
+    }
+
+    .log-line + .log-line { margin-top: 5px; }
+
+    .log-line.alarm { color: var(--alarm-log); font-weight: 700; }
+
+    @media (max-width: 930px) {
+      .main { grid-template-columns: 1fr; }
+      .chart-wrap { height: 260px; }
+      .top { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand">
+        <h1>Distance Alarm Control Deck</h1>
+        <p>Live-Sensoransicht mit stabiler SSE-Verbindung und Health-Status</p>
+      </div>
+      <div class="top-right">
+        <button id="theme-btn" class="theme-btn" type="button">Dark</button>
+        <div class="conn">
+          <span id="conn-dot" class="dot"></span>
+          <span id="conn-text">Verbinde...</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="panel">
+        <div class="label">Aktueller Abstand</div>
+        <div class="distance"><span id="distance">-</span><small>cm</small></div>
+        <div id="state-chip" class="state-chip ok">Warte auf Daten</div>
+
+        <div class="kpi-grid">
+          <div class="kpi"><div class="k">Mittelwert</div><div id="avg-distance" class="v">-</div></div>
+          <div class="kpi"><div class="k">Min / Max</div><div id="min-max" class="v">-</div></div>
+          <div class="kpi"><div class="k">Samples</div><div id="samples" class="v">-</div></div>
+          <div class="kpi"><div class="k">Trend (10)</div><div id="trend" class="v">-</div></div>
+          <div class="kpi"><div class="k">BUBU Counter</div><div id="alarm-count" class="v">0 🥣</div></div>
+        </div>
+
+        <div class="meta">
+          <div>Quelle: <code id="source">-</code></div>
+          <div>Letztes Update: <code id="last-time">-</code></div>
+          <div>Server-Modus: <code id="mode">-</code></div>
+          <div>Port: <code id="serial-port">-</code></div>
+          <div>Grenzen: <code id="thresholds">warn<=15 / alarm<=5</code></div>
+        </div>
+
+        <div class="health" id="health-box">Health wird geladen...</div>
+
+        <div class="actions">
+          <button id="stream-btn" type="button">Stream stoppen</button>
+          <button id="pause-btn" type="button">Pause</button>
+          <button id="clear-btn" type="button">Logs leeren</button>
+          <button id="export-btn" type="button">CSV Export</button>
+          <button id="reconnect-btn" type="button">Reconnect</button>
+        </div>
+      </section>
+
+      <section class="panel chart-panel">
+        <div class="label">Verlauf (letzte 120 Messwerte)</div>
+        <div class="chart-wrap"><canvas id="chart" width="920" height="320"></canvas></div>
+        <div class="legend">
+          <div class="legend-left"><span class="swatch"></span><span>Abstand in cm</span></div>
+          <div id="stream-state">Stream: aktiv</div>
+        </div>
+        <div class="logs" id="logs"><div class="log-line">Warte auf Messwerte...</div></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const els = {
+      connDot: $("conn-dot"), connText: $("conn-text"),
+      distance: $("distance"), stateChip: $("state-chip"),
+      source: $("source"), lastTime: $("last-time"), mode: $("mode"), serialPort: $("serial-port"),
+      thresholds: $("thresholds"), healthBox: $("health-box"),
+      avg: $("avg-distance"), minMax: $("min-max"), samples: $("samples"), trend: $("trend"), alarmCount: $("alarm-count"),
+      logs: $("logs"), streamState: $("stream-state"),
+      streamBtn: $("stream-btn"),
+      pauseBtn: $("pause-btn"), clearBtn: $("clear-btn"), exportBtn: $("export-btn"), reconnectBtn: $("reconnect-btn"),
+      themeBtn: $("theme-btn"),
+      canvas: $("chart"),
+    };
+
+    const ctx = els.canvas.getContext("2d");
+    const history = [];
+    const maxHistory = 120;
+    let eventSource = null;
+    let paused = false;
+    let staleTimer = null;
+    let reconnectTimer = null;
+    let healthTimer = null;
+    let streamActive = true;
+    let alarmCounter = 0;
+
+    function themeColor(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function setTheme(mode) {
+      document.documentElement.setAttribute("data-theme", mode);
+      localStorage.setItem("distance_theme", mode);
+      els.themeBtn.textContent = mode === "dark" ? "Light" : "Dark";
+      drawChart();
+    }
+
+    function initTheme() {
+      const stored = localStorage.getItem("distance_theme");
+      const preferred = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      setTheme(stored || preferred);
+    }
+
+    function setConnection(ok, text) {
+      els.connText.textContent = text;
+      els.connDot.classList.remove("ok", "bad");
+      els.connDot.classList.add(ok ? "ok" : "bad");
+    }
+
+    function stateLabel(state) {
+      if (state === 2) return { cls: "alarm", text: "Alarm / BUBU" };
+      if (state === 1) return { cls: "warn", text: "Achtung" };
+      return { cls: "ok", text: "Alles ok" };
+    }
+
+    function formatLocal(tsIso) {
+      if (!tsIso) return "-";
+      const dt = new Date(tsIso);
+      if (Number.isNaN(dt.getTime())) return tsIso;
+      return dt.toLocaleString();
+    }
+
+    function addLog(text, cls = "") {
+      const div = document.createElement("div");
+      div.className = `log-line ${cls}`.trim();
+      div.textContent = text;
+      const placeholder = els.logs.querySelector(".log-line");
+      if (placeholder && placeholder.textContent.startsWith("Warte auf")) placeholder.remove();
+      els.logs.prepend(div);
+      while (els.logs.children.length > 120) els.logs.removeChild(els.logs.lastChild);
+    }
+
+    function updateAlarmCounterUi() {
+      els.alarmCount.textContent = `${alarmCounter} 🥣`;
+    }
+
+    function scheduleStale() {
+      if (!streamActive) return;
+      if (staleTimer) clearTimeout(staleTimer);
+      staleTimer = setTimeout(() => {
+        setConnection(false, "Keine neuen Daten (Timeout)");
+        els.streamState.textContent = "Stream: stale";
+      }, 7000);
+    }
+
+    function drawChart() {
+      const w = els.canvas.clientWidth;
+      const h = els.canvas.clientHeight;
+      if (els.canvas.width !== w || els.canvas.height !== h) {
+        els.canvas.width = w;
+        els.canvas.height = h;
+      }
+
+      ctx.clearRect(0, 0, w, h);
+      if (history.length < 2) return;
+
+      const pad = 18;
+      const gw = w - pad * 2;
+      const gh = h - pad * 2;
+      const values = history.map((hItem) => hItem.distance);
+      const minV = Math.min(...values, 0);
+      const maxV = Math.max(...values, 30);
+      const range = Math.max(10, maxV - minV);
+
+      for (let i = 0; i < 4; i++) {
+        const y = pad + i * (gh / 3);
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(w - pad, y);
+        ctx.strokeStyle = themeColor("--grid-line");
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      const thresholds = window.__thresholds || { warn_distance_cm: 15, alarm_distance_cm: 5 };
+      [
+        { yVal: thresholds.warn_distance_cm, color: themeColor("--warn-line") },
+        { yVal: thresholds.alarm_distance_cm, color: themeColor("--alarm-line") },
+      ].forEach((line) => {
+        const n = (line.yVal - minV) / range;
+        const y = h - pad - n * gh;
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(w - pad, y);
+        ctx.strokeStyle = line.color;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      });
+
+      ctx.beginPath();
+      history.forEach((point, idx) => {
+        const x = pad + (idx / Math.max(1, history.length - 1)) * gw;
+        const n = (point.distance - minV) / range;
+        const y = h - pad - n * gh;
+        if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = themeColor("--chart-line");
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      ctx.lineTo(w - pad, h - pad);
+      ctx.lineTo(pad, h - pad);
+      ctx.closePath();
+      ctx.fillStyle = themeColor("--chart-fill");
+      ctx.fill();
+
+      const latest = history[history.length - 1];
+      const x = pad + gw;
+      const n = (latest.distance - minV) / range;
+      const y = h - pad - n * gh;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = themeColor("--chart-line");
+      ctx.fill();
+    }
+
+    function applyMeasurement(m, source = "stream") {
+      if (paused) return;
+      const distance = Number(m.distance);
+      const state = Number(m.state);
+      if (!Number.isFinite(distance)) return;
+
+      const status = stateLabel(state);
+      els.distance.textContent = String(distance);
+      els.stateChip.className = `state-chip ${status.cls}`;
+      els.stateChip.textContent = status.text;
+      els.source.textContent = m.source || "-";
+      els.lastTime.textContent = formatLocal(m.timestamp_iso);
+
+      history.push({ distance, state, timestamp: m.timestamp_iso, source: m.source });
+      if (history.length > maxHistory) history.shift();
+      if (state === 2) alarmCounter += 1;
+      updateAlarmCounterUi();
+      drawChart();
+
+      if (state === 2) {
+        addLog(`${m.timestamp_iso} | ${distance}cm | ALARM`, "alarm");
+      } else {
+        addLog(`${m.timestamp_iso} | ${distance}cm | state=${state} | ${source}`);
+      }
+
+      setConnection(true, "Verbunden");
+      els.streamState.textContent = "Stream: aktiv";
+      scheduleStale();
+    }
+
+    function applyState(payload) {
+      els.mode.textContent = payload.mode || "-";
+      els.serialPort.textContent = payload.serial_port || "-";
+
+      const stats = payload.stats || {};
+      els.avg.textContent = stats.avg_distance != null ? `${stats.avg_distance} cm` : "-";
+      els.minMax.textContent = stats.min_distance != null ? `${stats.min_distance} / ${stats.max_distance} cm` : "-";
+      els.samples.textContent = stats.samples != null ? String(stats.samples) : "-";
+      els.trend.textContent = stats.avg_distance_last10 != null ? `${stats.avg_distance_last10} cm` : "-";
+
+      if (payload.thresholds) {
+        window.__thresholds = payload.thresholds;
+        els.thresholds.textContent = `warn<=${payload.thresholds.warn_distance_cm} / alarm<=${payload.thresholds.alarm_distance_cm}`;
+      }
+
+      if (Array.isArray(payload.history) && history.length === 0) {
+        payload.history.forEach((m) => {
+          const distance = Number(m.distance);
+          if (!Number.isFinite(distance)) return;
+          history.push({ distance, state: Number(m.state), timestamp: m.timestamp_iso, source: m.source });
+        });
+        while (history.length > maxHistory) history.shift();
+        alarmCounter = history.filter((h) => h.state === 2).length;
+        updateAlarmCounterUi();
+        drawChart();
+      }
+
+      if (payload.latest && (history.length === 0 || history[history.length - 1].timestamp !== payload.latest.timestamp_iso)) {
+        applyMeasurement(payload.latest, "snapshot");
+      }
+    }
+
+    async function pollHealth() {
+      try {
+        const r = await fetch("/health", { cache: "no-store" });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const h = await r.json();
+        const age = h.last_update_age_seconds == null ? "-" : `${h.last_update_age_seconds}s`;
+        const err = h.last_error ? ` | last_error: ${h.last_error}` : "";
+        els.healthBox.textContent = `uptime: ${h.uptime_seconds}s | mode: ${h.mode} | serial: ${h.serial_connected ? "connected" : "disconnected"} | last update: ${age}${err}`;
+      } catch (e) {
+        els.healthBox.textContent = `Health-Fehler: ${String(e)}`;
+      }
+    }
+
+    async function loadState() {
+      try {
+        const r = await fetch("/state", { cache: "no-store" });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const payload = await r.json();
+        applyState(payload);
+      } catch (e) {
+        addLog(`State-Fehler: ${String(e)}`);
+      }
+    }
+
+    function closeStream() {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+      if (staleTimer) {
+        clearTimeout(staleTimer);
+        staleTimer = null;
+      }
+    }
+
+    function connectSSE() {
+      if (!streamActive) return;
+      closeStream();
+      setConnection(false, "Verbinde SSE...");
+      els.streamState.textContent = "Stream: verbinde";
+
+      eventSource = new EventSource("/events");
+
+      eventSource.addEventListener("open", () => {
+        setConnection(true, "SSE verbunden");
+        els.streamState.textContent = "Stream: aktiv";
+      });
+
+      eventSource.addEventListener("update", (evt) => {
+        try {
+          const payload = JSON.parse(evt.data);
+          if (payload && payload.data) applyMeasurement(payload.data, payload.type || "update");
+        } catch (e) {
+          addLog(`Parse-Fehler: ${String(e)}`);
+        }
+      });
+
+      eventSource.onerror = () => {
+        if (!streamActive) return;
+        setConnection(false, "SSE getrennt");
+        els.streamState.textContent = "Stream: reconnect...";
+        closeStream();
+        reconnectTimer = setTimeout(connectSSE, 1200);
+      };
+    }
+
+    function exportCsv() {
+      if (!history.length) return;
+      const rows = ["timestamp,distance_cm,state,source"];
+      history.forEach((h) => rows.push(`${h.timestamp},${h.distance},${h.state},${h.source || ""}`));
+      const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `distance-history-${new Date().toISOString().replace(/[:.]/g, "-")}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    els.pauseBtn.addEventListener("click", () => {
+      paused = !paused;
+      els.pauseBtn.textContent = paused ? "Fortsetzen" : "Pause";
+      els.streamState.textContent = paused ? "Stream: pausiert (UI)" : "Stream: aktiv";
+    });
+
+    els.clearBtn.addEventListener("click", () => {
+      els.logs.innerHTML = "<div class='log-line'>Logs geleert.</div>";
+    });
+
+    els.exportBtn.addEventListener("click", exportCsv);
+    els.reconnectBtn.addEventListener("click", connectSSE);
+    els.streamBtn.addEventListener("click", () => {
+      streamActive = !streamActive;
+      if (streamActive) {
+        els.streamBtn.textContent = "Stream stoppen";
+        els.streamState.textContent = "Stream: starte...";
+        connectSSE();
+      } else {
+        closeStream();
+        setConnection(false, "Stream manuell gestoppt");
+        els.streamBtn.textContent = "Stream starten";
+        els.streamState.textContent = "Stream: gestoppt";
+      }
+    });
+    els.themeBtn.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      setTheme(next);
+    });
+
+    window.addEventListener("resize", drawChart);
+
+    (async function boot() {
+      initTheme();
+      await loadState();
+      await pollHealth();
+      connectSSE();
+      healthTimer = setInterval(async () => {
+        await pollHealth();
+        await loadState();
+      }, 8000);
+    })();
+  </script>
+</body>
+</html>
