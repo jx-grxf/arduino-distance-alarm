@@ -1,153 +1,143 @@
 # Arduino Distance Alarm
 
-A real-time proximity alarm system built with an Arduino and a web-based live dashboard.
+<p align="center">
+  <strong>Arduino serial telemetry, a Python dashboard, and live browser updates with SSE.</strong>
+</p>
 
-**Data flow:**
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+" />
+  <img src="https://img.shields.io/badge/Flask-3.x-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask 3.x" />
+  <img src="https://img.shields.io/badge/Arduino-Sketch-00979D?style=for-the-badge&logo=arduino&logoColor=white" alt="Arduino Sketch" />
+  <img src="https://img.shields.io/badge/Transport-SSE-0EA5E9?style=for-the-badge" alt="SSE transport" />
+</p>
 
-```
-Arduino (Serial) → Python/Flask Server → SSE → Browser Dashboard
-```
+<p align="center">
+  <img src="./assets/showcase.svg" alt="Architecture showcase" width="920" />
+</p>
 
-## Features
+## Contents
 
-- **Ultrasonic distance sensing** via HC-SR04 with three alarm states (OK / WARNING / ALARM)
-- **Visual & audio feedback** on the Arduino: RGB LEDs, potentiometer-controlled brightness, and a buzzer
-- **16×2 I²C LCD** showing live distance and current state
-- **Live browser dashboard** streamed over Server-Sent Events (SSE) with auto-reconnect — no Socket.IO or CDN dependencies
-- **Demo mode** — simulates sensor data so you can run the dashboard without hardware
-- **Strict serial parser** with boot-noise tolerance and automatic state derivation from thresholds
-- **Diagnostic endpoints** (`/health`, `/state`) for quick debugging
-- CSV export, trend KPIs, and pause/reconnect controls in the UI
+- [Highlights](#highlights)
+- [Why This Exists](#why-this-exists)
+- [Current Workflow](#current-workflow)
+- [Tech Stack](#tech-stack)
+- [Requirements](#requirements)
+- [Quick Start](#quick-start)
+- [Usage](#usage)
+- [Development](#development)
+- [Roadmap](#roadmap)
+- [License](#license)
 
-## Hardware
+## Highlights
 
-| Component | Arduino Pin |
-|---|---|
-| HC-SR04 Trigger | D2 |
-| HC-SR04 Echo | D3 |
-| Green LED | D11 (PWM) |
-| Yellow LED | D10 (PWM) |
-| Red LED | D9 (PWM) |
-| Buzzer | D6 |
-| Potentiometer (brightness) | A0 |
-| I²C LCD (16×2, addr 0x27) | SDA/SCL |
+| Feature | Description |
+| --- | --- |
+| Serial ingestion | Reads Arduino distance values over USB serial with strict parsing and fallback handling. |
+| Live dashboard | Streams updates to the browser with Server-Sent Events and auto reconnect. |
+| Diagnostics | Exposes `/health` and `/state` for quick troubleshooting. |
+| Demo mode | Keeps the dashboard usable even without connected hardware. |
+| Convenience scripts | `start.sh` and `stop.sh` simplify local usage on macOS and Linux. |
+| Visual feedback | Shows status, thresholds, trends, and history in one place. |
 
-### Alarm States
+## Why This Exists
 
-| State | Condition | LED | Buzzer |
-|---|---|---|---|
-| `0` – OK | distance > 15 cm | Green | Off |
-| `1` – Warning | 5 cm < distance ≤ 15 cm | Yellow | Off |
-| `2` – Alarm | distance ≤ 5 cm | Red | 1200 Hz |
+This project rebuilds the original distance alarm into a more stable and inspectable stack:
+
+Arduino sensor data -> Python backend -> SSE stream -> browser dashboard
+
+The goal is to keep the hardware side simple while making the software side easier to debug, extend, and run locally.
+
+## Current Workflow
+
+1. Flash the Arduino sketch from `skechAdruinoAlarm/skechAdruinoAlarm.ino`.
+2. Start the Python server with `./start.sh`.
+3. Open the dashboard at `http://localhost:5050`.
+4. Check `/health` and `/state` if live data does not appear.
+5. Use `./stop.sh` to stop the server cleanly.
+
+## Tech Stack
+
+| Layer | Technology | Purpose |
+| --- | --- | --- |
+| Firmware | Arduino C++ sketch | Reads the ultrasonic sensor, drives LEDs, and prints serial telemetry. |
+| Backend | Python 3 + Flask | Serves the dashboard, diagnostics, and SSE stream. |
+| Serial I/O | pyserial | Detects and reads the Arduino serial connection. |
+| Frontend | HTML, CSS, JavaScript | Renders the live control deck and charting UI. |
+| Automation | Bash scripts | Provides start and stop helpers for local use. |
 
 ## Requirements
 
-- Python 3.9+
-- `flask >= 3.0`
-- `pyserial >= 3.5`
-- Arduino IDE (to flash the sketch)
-- Arduino library: **LiquidCrystal_I2C**
+- Python 3.11 or newer
+- `pip`
+- `flask`
+- `pyserial`
+- An Arduino board with the included sketch
+- Optional: `lsof` for the helper scripts
 
 ## Quick Start
 
-### 1 — Flash the Arduino
-
-Open `skechAdruinoAlarm/skechAdruinoAlarm.ino` in the Arduino IDE, select your board and port, and upload.
-
-### 2 — Set up the Python environment
-
 ```bash
+cd /Users/johannesgrof/Projects/Private/Private-Projects/adruino-distance-alarm
 python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
+./start.sh
 ```
 
-### 3 — Start the server (recommended)
+The dashboard opens on:
 
-`start.sh` auto-detects the Arduino port, kills any old server instance on the same port, and launches the dashboard:
-
-```bash
-./start.sh              # live mode  (auto-detect Arduino)
-./start.sh demo         # demo mode  (no hardware needed)
-HTTP_PORT=5060 ./start.sh   # custom port
+```text
+http://localhost:5050
 ```
 
-Open the dashboard: [http://localhost:5050](http://localhost:5050)
+## Usage
 
-To stop the server:
+### Local server
 
 ```bash
+python server.py
+python server.py --demo
+python server.py --list-ports
+python server.py --serial-port /dev/cu.usbmodemXXXX --baud 9600
+python server.py --http-port 5060
+```
+
+### Helper scripts
+
+```bash
+./start.sh
+./start.sh demo
+HTTP_PORT=5060 ./start.sh
 ./stop.sh
 ```
 
-### Manual start
+### Diagnostics
+
+- `GET /health` returns mode, uptime, connection state, and the last error.
+- `GET /state` returns the latest sample, recent history, and aggregate stats.
+- `GET /events` provides the SSE stream for the browser dashboard.
+
+## Development
+
+The backend is intentionally small, so development stays lightweight:
 
 ```bash
-python server.py                                         # auto-detect port
-python server.py --demo                                  # demo mode
-python server.py --list-ports                            # list available serial ports
-python server.py --serial-port /dev/cu.usbmodemXXXX     # explicit port
-python server.py --serial-port /dev/cu.usbmodemXXXX --baud 9600 --http-port 5050
+python -m py_compile server.py
+bash -n start.sh stop.sh
 ```
 
-You can also set the port via environment variable:
+The Arduino sketch emits strict `distance,state` lines. The backend accepts the following formats:
 
-```bash
-export ARDUINO_PORT=/dev/cu.usbmodemXXXX
-python server.py
-```
+- `distance,state`
+- `distance;state`
+- `distance`
 
-## Serial Protocol
+## Roadmap
 
-The Arduino sends one line per measurement at 9600 baud:
+- Add automated Arduino build validation if a local toolchain is added later.
+- Split the dashboard into smaller modules if the UI keeps growing.
+- Add basic browser-side tests once the UI stabilizes.
 
-```
-<distance_cm>,<state>
-```
+## License
 
-Examples:
-
-```
-23,0
-11,1
-4,2
-```
-
-The server also accepts `<distance_cm>;<state>` and bare `<distance_cm>` (state is then derived from the thresholds). Lines that cannot be parsed are silently ignored.
-
-## API Reference
-
-| Endpoint | Description |
-|---|---|
-| `GET /` | Live dashboard (HTML) |
-| `GET /events` | SSE stream — emits `update` events with the latest measurement |
-| `GET /state` | JSON snapshot: latest measurement, history (last 50), statistics, thresholds |
-| `GET /health` | JSON: uptime, mode, serial port, last error, connected client count |
-
-## Project Structure
-
-```
-.
-├── server.py                        # Flask backend + serial reader
-├── requirements.txt
-├── start.sh                         # Convenience start script
-├── stop.sh                          # Convenience stop script
-├── templates/
-│   └── index.html                   # Browser dashboard
-└── skechAdruinoAlarm/
-    └── skechAdruinoAlarm.ino        # Arduino sketch
-```
-
-## Troubleshooting
-
-**No live updates in the browser**
-- Check `http://localhost:5050/health` — inspect `mode` and `last_error`.
-- Check `http://localhost:5050/state` — verify that measurements are arriving.
-
-**Arduino not found**
-- Run `python server.py --list-ports` to list available serial ports.
-- Pass the correct port with `--serial-port`.
-
-**Only demo data visible**
-- Verify the baud rate (default: 9600) and USB connection.
-- Re-flash the sketch and check that the correct board is selected in the Arduino IDE.
+No license file is currently included in this repository.

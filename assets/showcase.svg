@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Arduino Distance Alarm architecture</title>
+  <desc id="desc">A simple flow diagram showing Arduino telemetry flowing into the Python server and then into the browser dashboard through SSE.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f7faf7" />
+      <stop offset="100%" stop-color="#e9f2fb" />
+    </linearGradient>
+    <linearGradient id="box" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f3f7fb" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.14" />
+    </filter>
+    <style>
+      .title { font: 700 34px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #12313a; }
+      .label { font: 700 22px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #12313a; }
+      .body { font: 500 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #52717a; }
+      .chip { font: 700 15px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f6d43; }
+      .chip2 { font: 700 15px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #8f6109; }
+      .chip3 { font: 700 15px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0b5c83; }
+    </style>
+  </defs>
+  <rect width="1200" height="420" rx="28" fill="url(#bg)" />
+  <text x="60" y="68" class="title">Arduino Distance Alarm</text>
+  <text x="60" y="104" class="body">Serial telemetry from the sensor board, streamed live into the browser dashboard.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="60" y="148" width="236" height="180" rx="22" fill="url(#box)" stroke="#c9d8d4" />
+    <rect x="482" y="148" width="236" height="180" rx="22" fill="url(#box)" stroke="#c9d8d4" />
+    <rect x="904" y="148" width="236" height="180" rx="22" fill="url(#box)" stroke="#c9d8d4" />
+  </g>
+
+  <text x="96" y="196" class="label">Arduino</text>
+  <text x="96" y="227" class="body">Ultrasonic sensor</text>
+  <text x="96" y="252" class="body">LEDs and buzzer</text>
+  <text x="96" y="277" class="body">Outputs distance,state</text>
+  <rect x="96" y="292" width="116" height="28" rx="14" fill="#e3f5eb" />
+  <text x="111" y="311" class="chip">Serial data</text>
+
+  <text x="518" y="196" class="label">Python server</text>
+  <text x="518" y="227" class="body">Flask app</text>
+  <text x="518" y="252" class="body">Parser and validator</text>
+  <text x="518" y="277" class="body">SSE stream and health API</text>
+  <rect x="518" y="292" width="110" height="28" rx="14" fill="#e0f2fe" />
+  <text x="534" y="311" class="chip3">SSE</text>
+
+  <text x="940" y="196" class="label">Browser</text>
+  <text x="940" y="227" class="body">Live dashboard</text>
+  <text x="940" y="252" class="body">Trend KPIs</text>
+  <text x="940" y="277" class="body">Health and history</text>
+  <rect x="940" y="292" width="126" height="28" rx="14" fill="#fef3c7" />
+  <text x="956" y="311" class="chip2">Auto reconnect</text>
+
+  <path d="M296 238 C352 238, 392 238, 458 238" fill="none" stroke="#1783b8" stroke-width="6" stroke-linecap="round" />
+  <path d="M458 238 L438 226 L438 250 Z" fill="#1783b8" />
+  <path d="M718 238 C774 238, 814 238, 880 238" fill="none" stroke="#1783b8" stroke-width="6" stroke-linecap="round" />
+  <path d="M880 238 L860 226 L860 250 Z" fill="#1783b8" />
+
+  <text x="350" y="215" class="body" text-anchor="middle">USB serial</text>
+  <text x="772" y="215" class="body" text-anchor="middle">Server-Sent Events</text>
+</svg>
